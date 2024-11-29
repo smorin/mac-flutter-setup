@@ -14,6 +14,9 @@ DASH := $(GRAY)-$(NC)
 
 .DEFAULT_GOAL := help
 
+help: ## Display this help screen
+	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "$(CYAN)%-30s$(NC) %s\n", $$1, $$2}' 
+
 # Add this near the top with your other variable definitions
 DRY_RUN ?= false
 
@@ -31,59 +34,6 @@ check-os: ## Verify this is running on macOS
 		echo "This Makefile is intended for macOS only"; \
 		exit 1; \
 	fi
-
-install-deps: check-os install-zsh install-rosetta install-xcode ## Install basic dependencies using Homebrew
-	@echo "Installing basic dependencies..."
-	@which brew || /bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-	@brew update
-	@brew install cocoapods
-	@brew install wget
-	@brew install git
-	@brew install --cask android-studio
-	@brew install --cask visual-studio-code
-
-install-flutter: install-deps ## Install Flutter SDK and add to PATH
-	@echo "Installing Flutter..."
-	@if [ ! -d "$(HOME)/development" ]; then \
-		mkdir -p $(HOME)/development; \
-	fi
-	@if [ ! -d "$(HOME)/development/flutter" ]; then \
-		git clone https://github.com/flutter/flutter.git $(HOME)/development/flutter; \
-	fi
-	@echo 'export PATH="$$PATH:$$HOME/development/flutter/bin"' >> $(HOME)/.zshrc
-	@echo 'export PATH="$$PATH:$$HOME/development/flutter/bin"' >> $(HOME)/.bashrc
-	@source $(HOME)/.zshrc || source $(HOME)/.bashrc
-	@flutter precache
-
-install-android: ## Setup Android development environment and accept licenses
-	@echo "Setting up Android development environment..."
-	@echo 'export ANDROID_HOME=$$HOME/Library/Android/sdk' >> $(HOME)/.zshrc
-	@echo 'export PATH=$$PATH:$$ANDROID_HOME/tools' >> $(HOME)/.zshrc
-	@echo 'export PATH=$$PATH:$$ANDROID_HOME/platform-tools' >> $(HOME)/.zshrc
-	@source $(HOME)/.zshrc
-	@flutter config --android-sdk $$ANDROID_HOME
-	@yes | flutter doctor --android-licenses
-
-install-ios: check-os ## Setup iOS development environment and Xcode
-	@echo "Setting up iOS development environment..."
-	@xcode-select --install || true
-	@sudo xcodebuild -license accept || true
-	@pod setup
-
-setup-web: ## Enable Flutter web development support
-	@echo "Setting up web development..."
-	@flutter config --enable-web
-
-check-deps: ## Verify all required dependencies are installed
-	@echo "Checking dependencies..."
-	@which flutter >/dev/null || (echo "Flutter is not installed" && exit 1)
-	@which git >/dev/null || (echo "Git is not installed" && exit 1)
-	@which pod >/dev/null || (echo "CocoaPods is not installed" && exit 1)
-	@which java >/dev/null || (echo "Java is not installed" && exit 1)
-
-doctor: check-deps ## Run Flutter doctor for environment verification
-	@echo "Running Flutter doctor..."
-	@flutter doctor -v
 
 check-arch: ## Check if running on Apple Silicon
 	@if [ "$$(uname -m)" = "arm64" ]; then \
@@ -192,5 +142,56 @@ install-xcode: check-os ## Install Xcode Command Line Tools
 		echo "Xcode Command Line Tools are already installed."; \
 	fi)
 
-help: ## Display this help screen
-	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "$(CYAN)%-30s$(NC) %s\n", $$1, $$2}' 
+install-deps: check-os install-zsh install-rosetta install-xcode ## Install basic dependencies using Homebrew
+	@echo "Installing basic dependencies..."
+	@which brew || /bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+	@brew update
+	@brew install cocoapods
+	@brew install wget
+	@brew install git
+	@brew install --cask android-studio
+	@brew install --cask visual-studio-code
+
+install-flutter: install-deps ## Install Flutter SDK and add to PATH
+	@echo "Installing Flutter..."
+	@if [ ! -d "$(HOME)/development" ]; then \
+		mkdir -p $(HOME)/development; \
+	fi
+	@if [ ! -d "$(HOME)/development/flutter" ]; then \
+		git clone https://github.com/flutter/flutter.git $(HOME)/development/flutter; \
+	fi
+	@echo 'export PATH="$$PATH:$$HOME/development/flutter/bin"' >> $(HOME)/.zshrc
+	@echo 'export PATH="$$PATH:$$HOME/development/flutter/bin"' >> $(HOME)/.bashrc
+	@source $(HOME)/.zshrc || source $(HOME)/.bashrc
+	@flutter precache
+
+install-android: ## Setup Android development environment and accept licenses
+	@echo "Setting up Android development environment..."
+	@echo 'export ANDROID_HOME=$$HOME/Library/Android/sdk' >> $(HOME)/.zshrc
+	@echo 'export PATH=$$PATH:$$ANDROID_HOME/tools' >> $(HOME)/.zshrc
+	@echo 'export PATH=$$PATH:$$ANDROID_HOME/platform-tools' >> $(HOME)/.zshrc
+	@source $(HOME)/.zshrc
+	@flutter config --android-sdk $$ANDROID_HOME
+	@yes | flutter doctor --android-licenses
+
+install-ios: check-os ## Setup iOS development environment and Xcode
+	@echo "Setting up iOS development environment..."
+	@xcode-select --install || true
+	@sudo xcodebuild -license accept || true
+	@pod setup
+
+setup-web: ## Enable Flutter web development support
+	@echo "Setting up web development..."
+	@flutter config --enable-web
+
+check-deps: ## Verify all required dependencies are installed
+	@echo "Checking dependencies..."
+	@which flutter >/dev/null || (echo "Flutter is not installed" && exit 1)
+	@which git >/dev/null || (echo "Git is not installed" && exit 1)
+	@which pod >/dev/null || (echo "CocoaPods is not installed" && exit 1)
+	@which java >/dev/null || (echo "Java is not installed" && exit 1)
+
+doctor: check-deps ## Run Flutter doctor for environment verification
+	@echo "Running Flutter doctor..."
+	@flutter doctor -v
+
