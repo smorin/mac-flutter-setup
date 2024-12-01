@@ -52,6 +52,7 @@ define print-help
 	@echo "Options:"
 	@echo "  DRY_RUN=true  # Dry run (prints commands without executing)"
 	@echo "  FORCE=true    # Force installation (reinstalls even if already present)"
+	@echo "  FLUTTER_HOME=$(HOME)/development/flutter  # Set the Flutter home directory"
 	@echo ""
 	@echo "Examples:"
 	@echo "  # Force installation (reinstalls even if already present)"
