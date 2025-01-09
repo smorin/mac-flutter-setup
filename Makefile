@@ -292,19 +292,24 @@ install-vscode: ## Install Visual Studio Code
 	@echo "Please install the Flutter extension manually:"
 	$(call execute,open "https://marketplace.visualstudio.com/items?itemName=Dart-Code.flutter")
 
-install-flutter: ## Instructions to prompt VS Code to install Flutter
-	@echo "Prompt VS Code to install Flutter"
-	@echo "Launch VS Code."
-	@echo "To open the Command Palette, press Command + Shift + P."
-	@echo "In the Command Palette, type flutter."
-	@echo "Select Flutter: New Project."
-	@echo "VS Code prompts you to locate the Flutter SDK on your computer."
-	@echo "If you have the Flutter SDK installed, click Locate SDK."
-	@echo "If you do not have the Flutter SDK installed, click Download SDK."
-	@echo "VS Code will download the Flutter SDK and add it to your PATH."
-	@echo "You can verify the Flutter SDK is in your PATH by running 'flutter' in your terminal."
+install-flutter: ## Instructions to prompt VS Code to install Flutter shoudl be run manually and use very clear language
+	echo -e "${RED}Run manual steps${NC}""
+	@echo "Summary: You'll prompt VS Code to install Flutter."
 	@echo ""
-	@echo "make setup-flutter-path FLUTTER_HOME=/path/to/flutter"
+	@echo "1. Open VS Code."
+	@echo "2. Open the Command Palette, press Command + Shift + P."
+	@echo "3. Type flutter in the Command Palette."
+	@echo "4. Select Flutter: New Project."
+	@echo "5. VS Code prompts you to locate the Flutter SDK on your computer."
+	@echo "		If you have the Flutter SDK installed, click Locate SDK."
+	@echo "		If you do not have the Flutter SDK installed, click Download SDK."
+	@echo "			VS Code will download the Flutter SDK and add it to your PATH."
+	@echo "		You can verify the Flutter SDK is in your PATH by running 'flutter' in your terminal."
+	@echo ""
+	@echo "For more information, see https://flutter.dev/docs/get-started/install/macos"
+	@echo ""
+	@echo "6. Copy the path. VS Code will present a button to copy the Flutter PATH to the clipboard."
+	@echo "7. make setup-flutter-path FLUTTER_HOME=/REPLACE/FLUTTER/PATH"
 
 # TODO: Need to validate if this is needed
 #install-ios: check-os ## Setup iOS development environment and Xcode
