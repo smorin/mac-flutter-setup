@@ -1,4 +1,4 @@
-SHELL := /bin/bash
+SHELL := /bin/zsh
 
 # Text colors
 BLACK := \033[30m
@@ -34,7 +34,7 @@ CHECK := $(GREEN)✓$(NC)
 CROSS := $(RED)✗$(NC)
 DASH := $(GRAY)-$(NC)
 
-.PHONY: help check-os install-all install-flutter install-android install-ios check-deps setup-web doctor check-arch check-shell check-environment check-rosetta check-status install-zsh install-rosetta install-xcode install-homebrew install-cocoapods install-git install-android-studio install-vscode setup-flutter-path
+.PHONY: help check-os install-all install-flutter install-android install-ios check-deps setup-web doctor check-arch check-shell check-environment check-base-environment check-rosetta check-status install-zsh install-rosetta install-xcode install-homebrew install-cocoapods install-git install-android-studio install-vscode setup-flutter-path
 
 .DEFAULT_GOAL := help
 
@@ -100,14 +100,19 @@ check-arch: ## Check if running on Apple Silicon
 	fi
 
 check-shell: ## Check if using ZSH shell
-	@if [ "$$SHELL" = "/bin/zsh" ]; then \
-		echo "Using ZSH shell"; \
+	@echo "SHELL: $$SHELL"
+	@shell_process=$$(ps -p $$$$ -o comm=); \
+	if [ "$$SHELL" = "/bin/zsh" ] && { [ "$$shell_process" = "/bin/zsh" ] || [ "$$shell_process" = "zsh" ]; }; then \
+		echo -e "[$(CHECK)] Using ZSH shell"; \
 	else \
-		echo "Not using ZSH shell (required to switch to ZSH)"; \
-		echo "Current shell: $$SHELL"; \
+		echo -e "[$(CROSS)] Not using ZSH shell (required to switch to ZSH)"; \
+		echo "Current shell ($$SHELL): $$shell_process"; \
 		exit 1; \
 	fi
 
+check-base-environment: check-os check-shell ## Check complete environment (OS, Shell)
+	@echo "Environment check complete"
+	
 check-rosetta: ## Check Rosetta 2 installation status on Apple Silicon
 	@if [ "$$(uname -m)" = "arm64" ]; then \
 		if pkgutil --pkg-info com.apple.pkg.RosettaUpdateAuto > /dev/null 2>&1; then \
@@ -156,12 +161,16 @@ define check_flutter_doctor
 		echo "Running Flutter doctor..."; \
 		flutter doctor -v; \
 	else \
-		printf "[$(CROSS)] Flutter ($(GREEN)make install-flutter$(NC))\n"; \
-		echo "Cannot run Flutter doctor - Flutter is not installed."; \
+		if [ "$(1)" != "PASS" ]; then \
+			printf "[$(CROSS)] Flutter ($(GREEN)make install-flutter$(NC))\n"; \
+			echo "Cannot run Flutter doctor - Flutter is not installed."; \
+		fi; \
 	fi
 endef
 
-check-status: ## Display status of all required components with checkmarks
+#
+
+check-status: check-shell ## Display status of all required components with checkmarks
 	@echo "=== System Requirements Status ==="
 	@# Check macOS
 	@if [ "$$(uname)" = "Darwin" ]; then \
@@ -171,13 +180,12 @@ check-status: ## Display status of all required components with checkmarks
 	fi
 	$(call check_command,zsh,ZSH Shell,install-zsh)
 	$(call check_command,brew,Homebrew,install-homebrew)
-	@# Check Rosetta 2 on Apple Silicon
 	@if [ "$$(uname -m)" = "arm64" ]; then \
 		if pkgutil --pkg-info com.apple.pkg.RosettaUpdateAuto > /dev/null 2>&1; then \
 			printf "[$(CHECK)] Rosetta 2\n"; \
 		else \
 			printf "[$(CROSS)] Rosetta 2 ($(GREEN)make install-rosetta$(NC))\n"; \
-		fi \
+		fi; \
 	else \
 		printf "[$(DASH)] Rosetta 2 (Not Required - Intel Mac)\n"; \
 	fi
@@ -187,7 +195,7 @@ check-status: ## Display status of all required components with checkmarks
 	$(call check_app,Android Studio.app,Android Studio,install-android-studio)
 	$(call check_command_or_app,code,Visual Studio Code,Visual Studio Code,install-vscode)
 	$(call check_command,flutter,Flutter,install-flutter)
-	$(call check_flutter_doctor)
+	$(call check_flutter_doctor,PASS)
 	@echo ""
 	@echo "Example:"
 	@echo -e "  ${BLUE}make install-git FORCE=true DRY_RUN=true${NC}"
@@ -204,7 +212,7 @@ install-zsh: ## Set ZSH as the default shell
 install-rosetta: check-os ## Install Rosetta 2 for Apple Silicon Macs
 	@echo "Installing Rosetta 2..."
 	$(call execute,if [ "$$(uname -m)" = "arm64" ]; then \
-		if ! pkgutil --pkg-info com.apple.pkg.RosettaUpdateAuto > /dev/null 2>&1; then \
+		if ! pkgutil --pkg-info com.apple.pkg.RosettaUpdateAuto > /dev/null 2>\&1; then \
 			softwareupdate --install-rosetta --agree-to-license; \
 			echo "Rosetta 2 installed successfully."; \
 		else \
@@ -224,11 +232,14 @@ install-xcode: check-os ## Install Xcode Command Line Tools
 		echo "Xcode Command Line Tools are already installed."; \
 	fi)
 
-install-homebrew: check-os ## Install Homebrew
+install-homebrew: check-base-environment ## Install Homebrew
 	@echo "Checking Homebrew installation..."
 	$(call execute,if [ "$(FORCE)" = "true" ] || ! which brew > /dev/null 2>&1; then \
 		echo "Installing Homebrew..."; \
 		/bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; \
+		echo >> $(HOME)/.zprofile; \
+		echo 'eval "$$(/opt/homebrew/bin/brew shellenv)"' >> /Users/smorin/.zprofile ; \
+		eval "$$(/opt/homebrew/bin/brew shellenv)"; \
 		brew update; \
 	else \
 		echo "Homebrew is already installed. Use FORCE=true to reinstall."; \
@@ -293,8 +304,10 @@ install-vscode: ## Install Visual Studio Code
 	$(call execute,open "https://marketplace.visualstudio.com/items?itemName=Dart-Code.flutter")
 
 install-flutter: ## Instructions to prompt VS Code to install Flutter shoudl be run manually and use very clear language
-	echo -e "${RED}Run manual steps${NC}""
-	@echo "Summary: You'll prompt VS Code to install Flutter."
+	@echo ""
+	@echo -e "${RED}Run manual steps${NC}"
+	@echo ""
+	@echo "Summary: You'll prompt VS Code to install Flutter and add to path."
 	@echo ""
 	@echo "1. Open VS Code."
 	@echo "2. Open the Command Palette, press Command + Shift + P."
@@ -302,14 +315,17 @@ install-flutter: ## Instructions to prompt VS Code to install Flutter shoudl be 
 	@echo "4. Select Flutter: New Project."
 	@echo "5. VS Code prompts you to locate the Flutter SDK on your computer."
 	@echo "		If you have the Flutter SDK installed, click Locate SDK."
-	@echo "		If you do not have the Flutter SDK installed, click Download SDK."
-	@echo "			VS Code will download the Flutter SDK and add it to your PATH."
-	@echo "		You can verify the Flutter SDK is in your PATH by running 'flutter' in your terminal."
+	@echo "		If you do not have the Flutter SDK installed, click Download"
+	@echo "			 SDK. VS Code will download the Flutter SDK and add it "
+	@echo "			 to your PATH."
+	@echo "		You can verify the Flutter SDK is in your PATH "
+	@echo "			by running 'flutter' in your terminal."
 	@echo ""
 	@echo "For more information, see https://flutter.dev/docs/get-started/install/macos"
 	@echo ""
-	@echo "6. Copy the path. VS Code will present a button to copy the Flutter PATH to the clipboard."
-	@echo "7. make setup-flutter-path FLUTTER_HOME=/REPLACE/FLUTTER/PATH"
+	@echo "6. Copy the path. VS Code will present a button to copy the "
+	@echo "		Flutter PATH to the clipboard."
+	@echo -e "7. ${BLUE}make setup-flutter-path FLUTTER_HOME=/REPLACE/FLUTTER/PATH${NC}"
 
 # TODO: Need to validate if this is needed
 #install-ios: check-os ## Setup iOS development environment and Xcode
