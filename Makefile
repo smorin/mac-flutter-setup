@@ -52,7 +52,7 @@ define print-help
 	@echo "Options:"
 	@echo "  DRY_RUN=true  # Dry run (prints commands without executing)"
 	@echo "  FORCE=true    # Force installation (reinstalls even if already present)"
-	@echo "  FLUTTER_HOME=$(HOME)/development/flutter  # Set the Flutter home directory"
+	@echo "  FLUTTER_HOME=$(HOME)/flutter  # Set the Flutter home directory"
 	@echo ""
 	@echo "Examples:"
 	@echo "  # Force installation (reinstalls even if already present)"
@@ -84,7 +84,6 @@ help: ## Display this help screen
 # Add this near the top with your other variable definitions
 DRY_RUN ?= false
 FORCE ?= false
-FLUTTER_HOME ?= $(HOME)/development/flutter
 
 check-os: ## Verify this is running on macOS
 	@if [ "$$(uname)" != "Darwin" ]; then \
@@ -342,15 +341,23 @@ setup-web: ## Enable Flutter web development support
 	@echo "Setting up web development..."
 	@flutter config --enable-web
 
+
+#/Users/smorin/c/flutter
+
 setup-flutter-path: ## Setup Flutter PATH in .zshenv
-	@echo "Setting up Flutter PATH..."
+	@if [ -z "$(FLUTTER_HOME)" ]; then \
+		echo "FLUTTER_HOME is not set. Please set FLUTTER_HOME to the Flutter installation directory."; \
+		exit 1; \
+	fi
+	@echo "Setting up Flutter PATH... in file: $(HOME).zshenv"
+	@echo "  Using FLUTTER_HOME: $(FLUTTER_HOME)"
 	$(call execute,if [ ! -f "$(HOME)/.zshenv" ]; then \
 		touch "$(HOME)/.zshenv"; \
 	fi)
-	$(call execute,if ! grep -q "export PATH=\$$FLUTTER_HOME/bin:\$$PATH" "$(HOME)/.zshenv"; then \
+	$(call execute,if ! grep -q "export PATH=\$$PATH:\$$FLUTTER_HOME/bin" "$(HOME)/.zshenv"; then \
 		echo "export FLUTTER_HOME=\"$(FLUTTER_HOME)\"" >> "$(HOME)/.zshenv"; \
-		echo 'export PATH=$$FLUTTER_HOME/bin:$$PATH' >> "$(HOME)/.zshenv"; \
-		echo "Flutter PATH added to .zshenv"; \
+		echo 'export PATH=$$PATH:$$FLUTTER_HOME/bin' >> "$(HOME)/.zshenv"; \
+		echo "Flutter PATH added to $(HOME)/.zshenv"; \
 		echo "Please restart your terminal or run: source $(HOME)/.zshenv"; \
 	else \
 		echo "Flutter PATH already exists in .zshenv"; \
