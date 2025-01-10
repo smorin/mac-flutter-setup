@@ -277,8 +277,8 @@ install-android-studio: install-homebrew ## Install Android Studio
 		echo ""; \
 		echo "Summary: install Android SDK"; \
 		echo "1. Open Android Studio."; \
-		echo "2. In Android Studio, click Configure > SDK Manager."; \
-		echo "3. In SDK Tools, check Show Package Details."; \
+		echo "2. In Android Studio: click Configure > SDK Manager."; \
+		echo "3. In SDK Tools: check Show Package Details."; \
 		echo "4. Expand Android SDK Location and click Install Packages."; \
 		echo "5. Check Include Android SDK."; \
 		echo "6. Click Next and Install."; \
@@ -354,9 +354,6 @@ install-all: check-os install-zsh install-rosetta install-xcode install-homebrew
 setup-web: ## Enable Flutter web development support
 	@echo "Setting up web development..."
 	@flutter config --enable-web
-
-
-#/Users/smorin/c/flutter
 
 setup-flutter-path: ## Setup Flutter PATH in .zshenv
 	@if [ -z "$(FLUTTER_HOME)" ]; then \
