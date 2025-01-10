@@ -196,6 +196,8 @@ check-status: check-shell ## Display status of all required components with chec
 	$(call check_command,flutter,Flutter,install-flutter)
 	$(call check_flutter_doctor,PASS)
 	@echo ""
+	@echo "${RED}Run manual steps recommended by flutter doctor${NC}"
+	@echo ""
 	@echo "Example:"
 	@echo -e "  ${BLUE}make install-git FORCE=true DRY_RUN=true${NC}"
 
@@ -264,18 +266,29 @@ install-git: install-homebrew ## Install git
 
 install-android-studio: install-homebrew ## Install Android Studio
 	@echo "Checking Android Studio installation..."
-	$(call execute,if [ "$(FORCE)" = "true" ] || ! ls /Applications/Android\ Studio.app > /dev/null 2>&1; then \
+	$(call execute,echo "before")
+	$(call execute,echo "in macro"; \
+	if [ "$(FORCE)" = "true" ] || ! ls "/Applications/Android Studio.app" > /dev/null 2>&1; then \
 		echo "Installing Android Studio..."; \
+		echo ""; \
 		brew install --cask android-studio; \
-		echo "Launch Android Studio."; \
-		echo "In Android Studio, click Configure > SDK Manager."; \
-		echo "In SDK Tools, check Show Package Details."; \
-		echo "Expand Android SDK Location and click Install Packages."; \
-		echo "Check Include Android SDK."; \
-		echo "Click Next and Install."; \
-		echo "Click Finish."; \
+		echo ""; \
+		echo -e "${RED}1. MANUAL STEP NEXT - 1st${NC}"; \
+		echo ""; \
+		echo "Summary: install Android SDK"; \
+		echo "1. Open Android Studio."; \
+		echo "2. In Android Studio, click Configure > SDK Manager."; \
+		echo "3. In SDK Tools, check Show Package Details."; \
+		echo "4. Expand Android SDK Location and click Install Packages."; \
+		echo "5. Check Include Android SDK."; \
+		echo "6. Click Next and Install."; \
+		echo "7. Click Finish."; \
+		echo ""; \
 		open /Applications/Android\ Studio.app; \
-		echo "To install command-line tools manually:"; \
+		echo ""; \
+		echo -e "${RED}2. MANUAL STEP NEXT - 2nd${NC}"; \
+		echo ""; \
+		echo "Summary: install command-line tools manually:"; \
 		echo "1. Open Android Studio"; \
 		echo "2. Click 'More Actions' > 'SDK Manager'"; \
 		echo "3. Select 'SDK Tools' tab"; \
@@ -293,6 +306,7 @@ install-android-studio: install-homebrew ## Install Android Studio
 		echo "4. Check 'Android SDK Command-line Tools (latest)'"; \
 		echo "5. Click 'Apply' and accept the license"; \
 	fi)
+	echo "after"
 
 install-vscode: ## Install Visual Studio Code
 	@echo "Checking Visual Studio Code installation..."
