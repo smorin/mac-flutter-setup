@@ -266,9 +266,7 @@ install-git: install-homebrew ## Install homebrew
 
 install-android-studio: install-homebrew install-java## Install Android Studio
 	@echo "Checking Android Studio installation..."
-	$(call execute,echo "before")
-	$(call execute,echo "in macro"; \
-	if [ "$(FORCE)" = "true" ] || ! ls "/Applications/Android Studio.app" > /dev/null 2>&1; then \
+	$(call execute,if [ "$(FORCE)" = "true" ] || ! ls "/Applications/Android Studio.app" > /dev/null 2>&1; then \
 		echo "Installing Android Studio..."; \
 		echo ""; \
 		brew install --cask android-studio; \
