@@ -34,7 +34,7 @@ CHECK := $(GREEN)✓$(NC)
 CROSS := $(RED)✗$(NC)
 DASH := $(GRAY)-$(NC)
 
-.PHONY: help check-os install-all install-flutter install-android install-ios check-deps setup-web doctor check-arch check-shell check-environment check-base-environment check-rosetta check-status install-zsh install-rosetta install-xcode install-homebrew install-cocoapods install-git install-android-studio install-vscode setup-flutter-path
+.PHONY: help check-os install-all install-flutter install-android install-ios check-deps setup-web doctor check-arch check-shell check-environment check-base-environment check-rosetta check-status install-zsh install-rosetta install-xcode install-homebrew install-cocoapods install-git install-android-studio install-vscode setup-flutter-path install-java
 
 .DEFAULT_GOAL := help
 
@@ -255,7 +255,7 @@ install-cocoapods: install-homebrew ## Install CocoaPods
 		echo "CocoaPods is already installed. Use FORCE=true to reinstall."; \
 	fi)
 
-install-git: install-homebrew ## Install git
+install-git: install-homebrew ## Install homebrew
 	@echo "Checking git installation..."
 	$(call execute,if [ "$(FORCE)" = "true" ] || ! which git > /dev/null 2>&1; then \
 		echo "Installing git..."; \
@@ -264,7 +264,7 @@ install-git: install-homebrew ## Install git
 		echo "git is already installed. Use FORCE=true to reinstall."; \
 	fi)
 
-install-android-studio: install-homebrew ## Install Android Studio
+install-android-studio: install-homebrew install-java## Install Android Studio
 	@echo "Checking Android Studio installation..."
 	$(call execute,echo "before")
 	$(call execute,echo "in macro"; \
@@ -294,7 +294,12 @@ install-android-studio: install-homebrew ## Install Android Studio
 		echo "3. Select 'SDK Tools' tab"; \
 		echo "4. Check 'Android SDK Command-line Tools (latest)'"; \
 		echo "5. Click 'Apply' and accept the license"; \
-		echo -e "Run ${RED}path/to/sdkmanager --install \"cmdline-tools;latest\"${NC}"; \
+		echo -e "6. Run ${RED}make setup-java-path JAVA_HOME=\"/REPLACE/FLUTTER/PATH\"${NC}"; \
+		echo "	Default:"; \
+		echo "	${YELLOW}/Applications/Android Studio.app/Contents/jbr/Contents/Home${NC}"; \
+		echo -e "7. Run ${RED}path/to/sdkmanager --install \"cmdline-tools;latest\"${NC}"; \
+		echo "	Default:"; \
+		echo "	${YELLOW}/Users/$(USER)/Library/Android/sdk/cmdline-tools/latest/bin/sdkmanager${NC}"; \
 		echo "See https://developer.android.com/studio/command-line for more details."; \
 		echo -e "Run ${RED}flutter doctor --android-licenses${NC} to accept the SDK licenses."; \
 	else \
@@ -306,7 +311,26 @@ install-android-studio: install-homebrew ## Install Android Studio
 		echo "4. Check 'Android SDK Command-line Tools (latest)'"; \
 		echo "5. Click 'Apply' and accept the license"; \
 	fi)
-	echo "after"
+
+setup-java-path: ## Setup Java PATH in .zshenv
+	@if [ -z "$(JAVA_HOME)" ]; then \
+		echo "JAVA_HOME is not set. Please set JAVA_HOME to the Java installation directory."; \
+		exit 1; \
+	fi
+	@echo "Setting up Java PATH... in file: $(HOME).zshenv"
+	@echo "  Using JAVA_HOME: $(JAVA_HOME)"
+	$(call execute,if [ ! -f "$(HOME)/.zshenv" ]; then \
+		touch "$(HOME)/.zshenv"; \
+	fi)
+	$(call execute,if ! grep -q "export PATH=\$$PATH:\$$JAVA_HOME/bin" "$(HOME)/.zshenv"; then \
+		echo "export JAVA_HOME=\"$(JAVA_HOME)\"" >> "$(HOME)/.zshenv"; \
+		echo 'export PATH=$$PATH:$$JAVA_HOME/bin' >> "$(HOME)/.zshenv"; \
+		echo "Java PATH added to $(HOME)/.zshenv"; \
+		echo "Please restart your terminal or run: source $(HOME)/.zshenv"; \
+	else \
+		echo "Java PATH already exists in .zshenv"; \
+	fi)
+
 
 install-vscode: ## Install Visual Studio Code
 	@echo "Checking Visual Studio Code installation..."
@@ -374,3 +398,13 @@ setup-flutter-path: ## Setup Flutter PATH in .zshenv
 		echo "Flutter PATH already exists in .zshenv"; \
 	fi)
 
+
+play: ## use to test commands
+	@echo "play target: before macro"
+	$(call execute,echo "in macro"; \
+	if [ "true" = "true" ] ; then \
+		echo "	/Users/$(USER)/Library/Android/sdk/cmdline-tools/latest/bin/sdkmanager"; \
+	else \
+		echo "nope"; \
+	fi)
+	echo "after macro"
